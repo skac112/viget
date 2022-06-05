@@ -8,8 +8,9 @@ import scalatags.JsDom.Frag
 import scalatags.JsDom.all._
 import shapeless._
 
-
 object Compound {
+  type Aux[T, CC] = Compound[T] { type C = CC }
+
   /**
     * Extracts out observable from hlist of controls
     */
@@ -28,7 +29,7 @@ object Compound {
     }
 
     implicit def hListExtr[VC <: VigetControl[T], T, H <: HList, O <: HList](implicit hExtr: OutExtractor.Aux[H, O]):
-    Aux[VC :: H, T :: O] = new OutExtractor[VC :: H] {
+      Aux[VC :: H, T :: O] = new OutExtractor[VC :: H] {
       type Out = T :: O
 
       override def extract(controls: VC :: H): Observable[Out] =
@@ -61,7 +62,7 @@ object Compound {
     }
 
     implicit def hListConnector[T, H <: HList, VT <: VigetControl[T], O <: HList](implicit hConnector: Connector.Aux[H, O]):
-      Aux[T :: H, VT :: O] = new Connector[T :: H] {
+    Aux[T :: H, VT :: O] = new Connector[T :: H] {
       type Out = VT :: O
 
       override def connect(in: Observable[T :: H], controls: VT :: O): Unit = {
@@ -91,12 +92,20 @@ object Compound {
 
 import com.github.skac112.viget.controls.compound.Compound._
 
-abstract class Compound[C <: HList, T](
-                                        implicit outExtr: OutExtractor.Aux[C, T],
-                                        connector: Connector.Aux[T, C],
-                                        markupMaker: MarkupMaker[C])
-  extends VigetControl[T] {
+/**
+  * @tparam T type of controlled data
+  */
+abstract class Compound[T]() extends VigetControl[T] {
+
+  /**
+    * Type of created controls.
+    */
+  type C <: HList
+
   def controls: C
+  implicit val outExtr: OutExtractor.Aux[C, T]
+  implicit val connector: Connector.Aux[T, C]
+  implicit val markupMaker: MarkupMaker[C]
   private def controlsMarkup: Seq[Frag] = markupMaker.markup(controls)
 
   override lazy val markup: Frag = div(id := htmlId)(
@@ -105,10 +114,8 @@ abstract class Compound[C <: HList, T](
     controlsMarkup,
     onchange := changeHndlr
     )
-//    for (cnt <- controls.values.toSeq) yield cnt.markup)
 
   override def mode: VigetControl.Mode.Mode = ???
-//  lazy val markupDom = markup.render
 
   private lazy val changeHndlr = {(event: Event) =>
     println("change!")

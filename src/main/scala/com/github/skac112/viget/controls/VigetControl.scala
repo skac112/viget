@@ -12,6 +12,10 @@ object VigetControl {
   val r = new scala.util.Random(31)
 }
 
+/**
+  *
+  * @tparam T type of controlled data
+  */
 trait VigetControl[T] {
   def htmlId: String = VigetControl.r.nextString(10)
   def markup: Frag

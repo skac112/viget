@@ -1,23 +1,25 @@
 package com.github.skac112.viget.controls.compound
 
 import shapeless.{HList, the}
+import Compound._
 
-//import Compound._
-//
-//case class QuickCompound[C <: HList, T](override val controls: C, htmlId: String)
-//                                       (implicit outExtr: OutExtractor.Aux[C, T],
-//                                        connector: Connector.Aux[T, C],
-//                                        markupMaker: MarkupMaker[C]) extends Compound[C, T]
-
-import Compound2._
-
+/**
+  *
+  * @param controls
+  * @param htmlIdO
+  * @param aOutExtr
+  * @param aConnector
+  * @param aMarkupMaker
+  * @tparam QC type of created controls (e. g. some HList subtype)
+  * @tparam T type of controlled data
+  */
 case class QuickCompound[QC <: HList, T](override val controls: QC, htmlIdO: Option[String] = None)
                                         (implicit aOutExtr: OutExtractor.Aux[QC, T],
                                          aConnector: Connector.Aux[T, QC],
                                          aMarkupMaker: MarkupMaker[QC])
-  extends Compound2[T] {
+  extends Compound[T] {
   override val htmlId = htmlIdO.getOrElse(super.htmlId)
-  import Compound2._
+  import Compound._
   type C = QC
   override implicit val outExtr: OutExtractor.Aux[QC, T] = aOutExtr
   override implicit val connector: Connector.Aux[T, QC] = aConnector
